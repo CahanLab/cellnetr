@@ -34,6 +34,17 @@ cn_apply<-function
  ### stQuery column name
 ){
   
+  # 08-07-14, set default to sample_name so that individual samples are plotted
+  
+  if(length(dLevelQuery)==0 ){
+    dLevelQuery<-"sample_name";
+  }
+  else{
+    xx<-which(colnames(stQuery)==dLevelQuery);
+    if(length(xx)==0){
+      dLevelQuery<-"sample_name";
+    }
+  }
   ctrlScores<-cnProc[['trainingScores']];   # subnet est scores in control  -- normalized, df
   normVals<-cnProc[['normVals']];              # average subnet est scores in control samples,  (list of ctt->subnet ave)
   minVals<-cnProc[['minVals']];             # min raw vals of grn establishments to shift by
@@ -205,6 +216,8 @@ cn_outputRes<-function
 ### write out grn scores, classification scores, normalized data to csv, then tar and  zip
 (cnRes,
  ### cnRes object
+ tfScores,
+ ### NIS
  prefix
  ### filename prefix
  ){
@@ -224,6 +237,11 @@ cn_outputRes<-function
   fname3<-paste(prefix, "_expNorm.csv", sep='');
   write.csv(expDat, file=fname3);
   
+  # write out one data file of TF scores
+  tfStab<-.cn_makeTFtable(tfScores);
+  fname4<-paste(prefix, "_NIS.csv", sep='');
+  write.csv(tfStab, file=fname4, row.names=F);
+  
   fnameOut<-paste(prefix,"_data.tar", sep='')
   cmd<-paste("tar -c ", fname1, " ",fname2," ", fname3," > ", fnameOut, sep='');
   system(cmd);
@@ -231,4 +249,20 @@ cn_outputRes<-function
   system(cmd);
   fnameOut;
   ### name of output file
+}
+
+.cn_makeTFtable<-function
+### convert a tf nis list to a DF
+(tfScores){
+  allTFs<-data.frame();
+  grnNames<-names(tfScores);
+  for(grnName in grnNames){
+    x<-tfScores[[grnName]];
+    genes<-rownames(x);
+    #rownames(x)<-'';
+    x2<-data.frame(reg=genes, grn=rep(grnName, length(genes)));
+    x2<-cbind(x2, x);
+    allTFs<-rbind(allTFs, x2);
+  }
+  allTFs
 }

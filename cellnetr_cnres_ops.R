@@ -1,8 +1,12 @@
-
+#
+# Copyright (C) 2014 Patrick Cahan
+#
 cn_outputRes<-function
 ### write out grn scores, classification scores, normalized data to csv, then tar and  zip
 (cnRes,
  ### cnRes object
+ tfScores,
+ ## tfscores
  prefix
  ### filename prefix
 ){
@@ -22,7 +26,18 @@ cn_outputRes<-function
   fname3<-paste(prefix, "_expNorm.csv", sep='');
   write.csv(expDat, file=fname3);
   
-  c(fname1, fname2, fname3);
+  # write out normalized query expression data
+  expDat<-cnRes[['expQuery']];
+  fname3<-paste(prefix, "_expNorm.csv", sep='');
+  write.csv(expDat, file=fname3);
+  
+  
+  # write out NIS
+  nisTab<-.cn_makeTFtable(tfScores);
+  fname4<-paste(prefix, "_NIS.csv", sep='');
+  write.csv(nisTab, file=fname4, row.names=F);
+  
+  c(fname1, fname2, fname3, fname4);
   
  ### file names of pdfs 
 }
@@ -120,6 +135,131 @@ CN3_NS_subnet<-function#runs CN3_netScores on each GRN
   x;
 }
 
+cn_nis_all<-function
+### NIS for all GRNs
+(cnRes,
+ ### cnRes object
+ cnProc,
+ ### CellNEt object used to produce cnRes
+ ctt,
+ ### target cell tissue type
+ relaWeight=1
+ ### whether to weight by overall expression such that TFs with higher expression in ctt are more important (1=do the weighting)
+ ){
+  ctGRNs<-names(cnProc$igGRNs);
+  ans<-list()
+  for(ctGRN in ctGRNs){
+    cat("scoring ", ctGRN,"\n")
+    x<-cn_nis(cnRes, cnProc, ctGRN, ctt,relaWeight);
+    ans[[ctGRN]]<-x;
+#    x<-cbind(x, grn=rep(ctGRN, nrow(x)));
+#    ans<-rbind(ans, x);
+  }
+  ans;
+  # list of numeric matrix of TF scores
+}
+
+
+cn_nis<-function
+### compute network influence score. see manuscript for details
+(cnRes,
+ ### cnRes object
+ cnProc,
+ ### CellNet object used to produce cnRes
+ subnet,
+ ### what subnet to evaluage
+ ctt,
+ ### what is the reference cell/tissue type
+ relaWeight=1
+ ### whether to weight by overall expression such that TFs with higher expression in ctt are more important (1=do the weighting)
+){
+  
+  tfTargList<-cnProc[['tfTargets']];
+  # return a DF of : tfs, nTargets, targetScore, tfScore, totalScore
+  nTargets<-vector();
+  targetScore<-vector();
+  tfScore<-vector();
+  totalScore<-vector();
+  tfWeights<-vector();
+  
+  tfs<-names(tfTargList[[subnet]]);
+  netGenes<-cnProc[['grnList']][[subnet]];
+  netGenes<-intersect(netGenes, rownames(cnProc[['expTrain']]))
+  
+  expDat<-cnRes[['expQuery']];
+  stQuery<-cnRes[['stQuery']];
+  sids<-as.vector(stQuery$sample_id);
+  
+  ans<-matrix(0, nrow=length(tfs), ncol=nrow(stQuery));
+  rownames(ans)<-tfs;
+  colnames(ans)<-sids;
+  
+  tVals<-cnProc[['tVals']];
+  
+  # compute a matrix of zscores.
+  zzzMat<-matrix(0, nrow=length(netGenes), ncol=nrow(stQuery));
+  
+  for(i in seq(length(sids))){
+    sid<-sids[i];
+    #cat("computing zscores ", sid,"\n");
+    xvals<-as.vector(expDat[netGenes,sid]);
+    names(xvals)<-netGenes;
+    zzzMat[,i]<-cn_zscoreVect(netGenes, xvals, tVals, ctt);    
+  }
+  
+  rownames(zzzMat)<-netGenes;
+  colnames(zzzMat)<-rownames(stQuery);
+  
+  for(sid in sids){
+    #cat("tf scoring ", sid,"\n");
+    xvals<-as.vector(expDat[,sid]);
+    names(xvals)<-rownames(expDat);
+    
+  
+    # assign weights
+    
+    ### # meanVect<-unlist(tVals[[ctt]][['mean']][netGenes]);
+    meanVect<-unlist(tVals[[subnet]][['mean']][netGenes]);
+    weights<-(2**meanVect)/sum(2**meanVect);
+    
+    for(i in seq(length(tfs))){
+      
+      tf<-tfs[i];
+      
+      # zscore of TF relative to target C/T
+##      tfScore[i]<-zscore(xvals[tf], tVals[[ctt]][['mean']][[tf]], tVals[[ctt]][['sd']][[tf]]);
+      
+      tfScore[i]<-zzzMat[tf,sid];
+      
+      targs<-tfTargList[[subnet]][[tf]];
+      targs<-intersect(targs, rownames(cnProc[['expTrain']]));
+      
+      # Zscores of TF targets, relative to C/T
+##      tmp<-cn_zscoreVect(targs, xvals, tVals, ctt );
+      tmp<-zzzMat[targs,sid];
+      targetScore[i]<-sum(tmp*weights[targs]);
+      
+      ## new one:
+      totalScore[i]<-targetScore[i] + (length(targs)*tfScore[i]*weights[tf]);
+      
+      if(relaWeight!=1){ # don't weight by expression
+        meanW<-mean(weights)
+        totalScore[i]<- sum(tmp)*meanW + (length(targs)*tfScore[i])*meanW
+      }
+      nTargets[i]<-length(targs) ;
+      tfWeights[i]<-weights[tf];
+    }
+    xxx<-data.frame(tf=tfs, tfScore=tfScore, targetScore=targetScore, nTargets=nTargets,tfWeight=tfWeights, totalScore=totalScore);
+    xxx<-xxx[order(xxx$totalScore),]; # puts the worst ones at top when plotting
+    xxx$tf<-factor(xxx$tf, as.vector(unique(xxx$tf)));
+    ans[as.vector(xxx$tf),sid]<-as.vector(xxx$totalScore);
+  }
+  ans;
+  # returns network influence score.
+}
+
+
+if(FALSE){
 cn_nis<-function
 ### compute network influence score. see manuscript for details
 (cnRes,
@@ -136,7 +276,7 @@ cn_nis<-function
  ### whether to weight by overall expression such that TFs with higher expression in ctt are more important (1=do the weighting)
  dLevel='description1'
  ### sampTab column name for grouping
- ){
+){
   
   tfTargList<-cnProc[['tfTargets']];
   # return a DF of : tfs, nTargets, targetScore, tfScore, totalScore
@@ -182,7 +322,7 @@ cn_nis<-function
     # Zscores of TF targets, relative to C/T
     tmp<-cn_zscoreVect(targs, xvals, tVals, ctt );
     targetScore[i]<-sum(tmp*weights[targs]);
-        
+    
     ## new one:
     totalScore[i]<-targetScore[i] + (length(targs)*tfScore[i]*weights[tf]);
     
@@ -198,6 +338,7 @@ cn_nis<-function
   ans$tf<-factor(ans$tf, as.vector(unique(ans$tf)));
   ans;
   # returns network influence score.
+}
 }
 
 cn_subnet_dysregUp<-function

@@ -25,12 +25,8 @@ cn_stdout<-function
  ### result of running cn_nis
  fname_prefix,
  ### what to put at the front of the pdffile name
- terminalSamples,
- ### grpname of terminal samples -- for scoring transcription factors
- targetType,
+ targetType
  ### what is the target cell type, must be one of the cell types listed in CellNet object
- sampOrder=NULL
- ### vector of dLevel values to order barplots by, if null, then in order in cnObj[['stQuery']] order
 ){
   
   ##<<note function to produce a 'standard' output consisting of:
@@ -54,13 +50,15 @@ cn_stdout<-function
   cttBest<-cnProc[['grnList']];
   dLevel<-cnObj[['dLevelQuery']];
   
+  if(FALSE){
   if(is.null(sampOrder)){
     bOrder<-unique(as.vector(stQuery[,dLevel]));
   }
   else{
     bOrder<-sampOrder;
   }
-    
+  }
+  
   # Classification heatmap
   myWidth<-nrow(stQuery)*.4;
   myHeight<-length(cttBest)*.3;
@@ -75,12 +73,13 @@ cn_stdout<-function
   grnNames<-rownames(cnObj[['normScoresQuery']]);
   for(grnName in grnNames){    
     tSamp<-paste(grnName, "_train", sep='');
-    print(cn_barplot_grnSing(cnObj, cnProc, grnName, grnName, c(tSamp, bOrder), norm=T));    
+    print(cn_barplot_grnSing(cnObj, cnProc, grnName, grnName, bOrder=NULL, norm=T));    
   }
-  
   # plot transcriptional regulator scores
-  # for now, this only looks at the target cell/tissue type
-  print(cn_plotnis(tfScores, main=targetType));
+  # for now, this only looks at the target cell/tissue type and is a heatmap
+##  tfS<-tfScores[which(tfScores$grn==targetType),];
+##  tfS<-tfS[,1:(ncol(tfS)-1)];
+  print(cn_plotnis(tfScores[[targetType]]));
   dev.off();
   fname;
   ### return the file name of the plot pdf file.
@@ -127,11 +126,19 @@ cn_barplot_grnSing<-function
     tmpAns<-rbind(tmpAns, xxx);
   }
   tmpAns<-cbind(tmpAns, src=rep("train", nrow(tmpAns)));
-  aa3<-rbind(aa3, tmpAns);
+  
   if(is.null(bOrder)){
-    bOrder<-aa3$grp_name[order(aa3$mean, decreasing=decr)];
+    bOrder<-c(as.vector(tmpAns$grp_name), as.vector(aa3$grp_name));
+    ##bOrder<-aa3$grp_name[order(aa3$mean, decreasing=TRUE)];
+    
   }
+  
+  aa3<-rbind(aa3, tmpAns);
   aa3$grp_name<-factor(aa3$grp_name, bOrder);
+  
+  #### 
+  
+  ##
   # convert is.na(stdev) -> 0
   xi<-which(is.na(aa3$stdev));
   if(length(xi)>0){
@@ -250,28 +257,115 @@ cn_hmClass<-function
 }
 
 
+# generic red/blue heatmap
+mp_hmVars<-function# basic heatmap
+(expDat,
+ ### numeric matrix
+ genes,
+ ### rownames to include in the heatmap
+ main='',
+ ### optional title for teh top of the HM
+ clusterR=T,
+ ### whether to cluster the Rows
+ clusterC=F,
+ ### whether to cluster the columns
+ scale='row',
+ ### normalize the data: 'row', 'column', or 'none'
+ big=FALSE,
+ ### if not big then add cell separators
+ dist=utils_myDist,
+ ###
+ margin=c(12,6),
+ ###
+ RowSideColors=NULL,
+ ###
+ ColSideColors=NULL,
+ ###
+ cexCol=1,
+ cexRow=1,
+ ccol=''
+){
+  
+  
+  
+  require(gplots);
+  genes<-intersect(rownames(expDat), genes);
+  
+  if(length(ccol)==4){
+    ccol<-colorpanel(ccol$n, ccol$low,ccol$mid, ccol$high);
+  }
+  else{
+    ccol<-bluered(100);
+  }
+  if(is.null(RowSideColors)){
+    RowSideColors<-rep('white', length(genes));
+  }
+  if(is.null(ColSideColors)){
+    ColSideColors<-rep('white', ncol(expDat));
+  }
+  if(!clusterR & ! clusterC){
+    dendrogram='none';
+  }
+  if(clusterR & clusterC){
+    dendrogram='both';
+  }
+  if(clusterR & !clusterC){
+    dendrogram='row';
+  }
+  if(!clusterR & clusterC){
+    dendrogram='column';
+  }
+  if(!big){
+    heatmap.2(expDat[genes,],
+              #col=bluered(100),
+              col=ccol,
+              scale=scale,
+              trace='none',
+              key=T,
+              dendrogram=dendrogram,
+              Rowv=clusterR,
+              Colv=clusterC,
+              density.info='none',
+              margin=margin,
+              colsep=seq(ncol(expDat)),
+              rowsep=seq(length(genes)),
+              sepcol='white',
+              sepwidth=c(0.001,0.00),
+              main=main,
+              dist=dist,
+              RowSideColors=RowSideColors,
+              ColSideColors=ColSideColors,
+              cexCol=cexCol,
+              cexRow=cexRow);
+  }
+  else{
+    heatmap.2(expDat[genes,],col=ccol, scale=scale, trace='none', key=T,dendrogram=dendrogram,Rowv=clusterR,Colv=clusterC,density.info='none',margin=margin,main=main,dist=dist,labRow='',labCol='',RowSideColors=RowSideColors,ColSideColors=ColSideColors,cexCol=cexCol,cexRow=cexRow);
+  }
+}
 
 
 cn_plotnis<-function
 ### plot Network influence scores
 (scoresDF,
- ### a data.frame produced by cn_nis
- color='#006837',
- ### default color is dark green
+ ### a numeric matrix of tfscores, rownames=genes
  main=NULL, 
  ### title
  limit=50
  ### limit output to top 50 TFs
  ){
 
-  scoresDF<-scoresDF[order(scoresDF$totalScore, decreasing=F),];
+  xmeans<-apply(scoresDF, 1, mean);
+  tfs<-rownames(scoresDF);
+  tfs<-tfs[order(xmeans, decreasing=F)];
+  scoresDF<-scoresDF[tfs,];
   if(nrow(scoresDF)>limit){
     scoresDF<-scoresDF[1:limit,];
   }
   
-##scores1a<-tsco1[tsco1$tfScore<0 ,]#& tsco1$totalScore>0,]
-  ggplot(data=scoresDF, aes(x=tf, y=totalScore))+ geom_bar(stat="identity", width=.8, fill=color) +
-    theme_bw() + coord_flip() + xlab("") +  theme(axis.text.y = element_text(size=4)) + ylab("Network influence score") + ggtitle(main);
-# barplot of NIS
-
+  ##scores1a<-tsco1[tsco1$tfScore<0 ,]#& tsco1$totalScore>0,]
+  #  ggplot(data=scoresDF, aes(x=tf, y=totalScore))+ geom_bar(stat="identity", width=.8, fill=color) +
+  #    theme_bw() + coord_flip() + xlab("") +  theme(axis.text.y = element_text(size=4)) + ylab("Network influence score") + ggtitle(main);
+  # barplot of NIS
+  mp_hmVars(scoresDF, rownames(scoresDF), scale='none', clusterR=F, clusterC=F, cexR=.75)
+  # heatmap of TF scores
 }
