@@ -28,8 +28,8 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-          <h3>
-<a name="cellnet-source-code" class="anchor" href="#cellnet-source-code"><span class="octicon octicon-link"></span></a>CellNet: source code</h3>
+          <h1>
+<a name="cellnet-source-code" class="anchor" href="#cellnet-source-code"><span class="octicon octicon-link"></span></a>CellNet: source code</h1>
 
 <p><b>CellNet</b> is a network biology-based computational platform that more accurately assesses the fidelity of cellular engineering than existing methodologies and generates hypotheses for improving cell derivations. CellNet is based on the reconstruction of cell type specific gene regulatory networks (GRNs), which we performed using publicly available microarray data on 21 cell and tissue types from both human and mouse samples. Code to run CellNet locally is available for download on this site. You can also analyze your data through our <a href="http://cellnet.hms.harvard.edu">our servers</a>, where you can also explore predicted transcriptional targets of over 1,200 mouse or human transcriptional regulators.</p>
 
@@ -58,10 +58,7 @@ $ git checkout gh-pages
 </code></pre>
 
 <h1>
-<a name="running-cellnet" class="anchor" href="#running-cellnet"><span class="octicon octicon-link"></span></a>Running CellNet</h1>
-
-<h3>
-<a name="set-up" class="anchor" href="#set-up"><span class="octicon octicon-link"></span></a>set-up</h3>
+<a name="setting-up-r-environment-for-cellnet" class="anchor" href="#setting-up-r-environment-for-cellnet"><span class="octicon octicon-link"></span></a>Setting up R environment for CellNet</h1>
 
 <pre><code># Set your library path so that it points to the correct platform and annotation libraries:
 .libPaths("~/sample_packages/install_dir")
@@ -91,12 +88,8 @@ library("mouse4302.db");
 # hugene10
 # library("hugene10sttranscriptcluster.db");
 # library("hugene10stv1cdf");
-</code></pre>
 
-<h3>
-<a name="set-up-some-commonly-used-values" class="anchor" href="#set-up-some-commonly-used-values"><span class="octicon octicon-link"></span></a>Set up some commonly used values</h3>
-
-<pre><code># set up path the CellNet objects containing the classifiers, GRNs, etc
+# set up path the CellNet objects containing the classifiers, GRNs, etc
 # Edit this so that it points to the path where you saved the CellNet objects 
 path_CN_obj&lt;-"~/CellNet/CN_Objects/"; 
 # change to reflect your platform
@@ -110,8 +103,8 @@ cName&lt;-"description1"
 targetCT&lt;-"hspc"
 </code></pre>
 
-<h3>
-<a name="load-and-process-data" class="anchor" href="#load-and-process-data"><span class="octicon octicon-link"></span></a>Load and process data</h3>
+<h1>
+<a name="load-data-and-run-cellnet" class="anchor" href="#load-data-and-run-cellnet"><span class="octicon octicon-link"></span></a>Load data and run CellNet</h1>
 
 <pre><code># Load sample table and fix the data file names 
 # replace 'sampleTab.csv' with your sample table name. See [Step 2 here](http://dev.cellnet.hms.harvard.edu/run/) for a description of the sample table format and an example table.
@@ -137,13 +130,28 @@ tmpAns&lt;-cn_apply(expQuery, stQuery, cnProc, dLevelQuery=cName);
 tfScores&lt;-cn_nis_all(tmpAns, cnProc, targetCT);
 </code></pre>
 
-<h3>
-<a name="visualize-the-results" class="anchor" href="#visualize-the-results"><span class="octicon octicon-link"></span></a>Visualize the results</h3>
+<h1>
+<a name="visualize-the-results" class="anchor" href="#visualize-the-results"><span class="octicon octicon-link"></span></a>Visualize the results</h1>
 
-<h2>
-<a name="classification-heatmap" class="anchor" href="#classification-heatmap"><span class="octicon octicon-link"></span></a>Classification heatmap</h2>
+<h3>
+<a name="classification-heatmap" class="anchor" href="#classification-heatmap"><span class="octicon octicon-link"></span></a>Classification heatmap</h3>
 
 <pre><code>cn_hmClass(tmpAns);
+</code></pre>
+
+<p><img src="img%20src=%22images/hmClass.png%22%20alt=%22hi%22%20class=%22inline%22/" alt="classification heatmap"></p>
+
+<h3>
+<a name="gene-regulatory-network-status" class="anchor" href="#gene-regulatory-network-status"><span class="octicon octicon-link"></span></a>Gene regulatory network status</h3>
+
+<pre><code># starting cell type (esc)
+cn_barplot_grnSing(tmpAns, cnProc, "esc", c("esc"), bOrder=NULL, norm=T);
+</code></pre>
+
+<p><img src="img%20src=%22./images/hmClass.png%22" alt="classification heatmap"></p>
+
+<pre><code># target cell type (hspc)
+cn_barplot_grnSing(tmpAns, cnProc, "hspc", c("hspc"), bOrder=NULL, norm=T);
 </code></pre>
 
 <h3>
