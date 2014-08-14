@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html>
+
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <meta name="description" content="Cellnetr : CellNet: network biology-based computational platform to assess establishment of cell type specific gene regulatory networks in user-provided gene expression profiles">
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Cellnetr by pcahan1</title>
+    <title>Cellnetr</title>
   </head>
 
   <body>
-    <header>
-      <div class="inner">
-        <h1>Cellnetr</h1>
-        <h2>CellNet: network biology-based computational platform to assess establishment of cell type specific gene regulatory networks in user-provided gene expression profiles</h2>
-        <a href="https://github.com/pcahan1/cellnetr" class="button"><small>View project on</small>GitHub</a>
-      </div>
-    </header>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <h3>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/pcahan1/cellnetr">View on GitHub</a>
+
+          <h1 id="project_title">Cellnetr</h1>
+          <h2 id="project_tagline">CellNet: network biology-based computational platform to assess establishment of cell type specific gene regulatory networks in user-provided gene expression profiles</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/pcahan1/cellnetr/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/pcahan1/cellnetr/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>
 <a name="cellnet-source-code" class="anchor" href="#cellnet-source-code"><span class="octicon octicon-link"></span></a>CellNet: source code</h3>
 
 <p><b>CellNet</b> is a network biology-based computational platform that more accurately assesses the fidelity of cellular engineering than existing methodologies and generates hypotheses for improving cell derivations. CellNet is based on the reconstruction of cell type specific gene regulatory networks (GRNs), which we performed using publicly available microarray data on 21 cell and tissue types from both human and mouse samples. Code to run CellNet locally is available for download on this site. You can also analyze your data through our <a href="http://cellnet.hms.harvard.edu">our servers</a>, where you can also explore predicted transcriptional targets of over 1,200 mouse or human transcriptional regulators.</p>
@@ -57,11 +60,11 @@ $ git fetch origin
 $ git checkout gh-pages
 </code></pre>
 
-<h3>
-<a name="running-cellnet" class="anchor" href="#running-cellnet"><span class="octicon octicon-link"></span></a>Running CellNet</h3>
+<h1>
+<a name="running-cellnet" class="anchor" href="#running-cellnet"><span class="octicon octicon-link"></span></a>Running CellNet</h1>
 
-<h2>
-<a name="set-up" class="anchor" href="#set-up"><span class="octicon octicon-link"></span></a>set-up</h2>
+<h3>
+<a name="set-up" class="anchor" href="#set-up"><span class="octicon octicon-link"></span></a>set-up</h3>
 
 <pre><code># Set your library path so that it points to the correct platform and annotation libraries:
 .libPaths("~/sample_packages/install_dir")
@@ -89,12 +92,25 @@ library("mouse4302.db");
 # library("hgu133plus2cdf");
 
 # hugene10
-library("hugene10sttranscriptcluster.db");
-library("hugene10stv1cdf");
+# library("hugene10sttranscriptcluster.db");
+# library("hugene10stv1cdf");
+</code></pre>
 
-# set up path the CellNet objects containing the classifiers, GRNs, etc
+<h3>
+<a name="set-up-some-commonly-used-values" class="anchor" href="#set-up-some-commonly-used-values"><span class="octicon octicon-link"></span></a>Set up some commonly used values</h3>
+
+<pre><code># set up path the CellNet objects containing the classifiers, GRNs, etc
 # Edit this so that it points to the path where you saved the CellNet objects 
 path_CN_obj&lt;-"~/CellNet/CN_Objects/"; 
+# change to reflect your platform
+myPlatform&lt;-"mouse4302" 
+
+# name of the column in the sample data table that indicates experimental groups or replicates
+# set to "", or "sample_name" if there are no replicates
+cName&lt;-"description1"
+
+# target tissue or cell type.
+targetCT&lt;-"hspc"
 </code></pre>
 
 <h3>
@@ -102,52 +118,59 @@ path_CN_obj&lt;-"~/CellNet/CN_Objects/";
 
 <pre><code># Load sample table and fix the data file names 
 # replace 'sampleTab.csv' with your sample table name. See [Step 2 here](http://dev.cellnet.hms.harvard.edu/run/) for a description of the sample table format and an example table.
-
 stQuery&lt;-expr_readSampTab("sampleTab.csv");
 stQuery&lt;-geo_fixNames(stQuery);
 
+# load and normalize expression data
+expQuery&lt;-Norm_cleanPropRaw(stQuery, "mouse4302");
+
+# load right CellNet object
+cnObjName&lt;-switch(myPlatform,
+                  mouse4302 = paste(path_CN_obj, "cnProc_mouse4302_062414.R",sep=''),
+                  mogene10stv1 = paste(path_CN_obj, "cnProc_mogene_062414.R",sep=''),
+                  hgu133plus2 = paste(path_CN_obj, "cnProc_Hg1332_062414.R",sep=''),
+                  hugene10stv1 = paste(path_CN_obj, "cnProc_Hugene_062414.R",sep=''));
+
+cnProc&lt;-utils_loadObject(cnObjName);
+
+# Run CellNet
+tmpAns&lt;-cn_apply(expQuery, stQuery, cnProc, dLevelQuery=cName);
+
+# Score transcription factors
+tfScores&lt;-cn_nis_all(tmpAns, cnProc, targetCT);
 </code></pre>
 
-<p>R load data
-R load meta-data
-R make a cellnetr object</p>
+<h3>
+<a name="visualize-the-results" class="anchor" href="#visualize-the-results"><span class="octicon octicon-link"></span></a>Visualize the results</h3>
 
-<pre><code>
-### Visualizing and interpreting results
+<h2>
+<a name="classification-heatmap" class="anchor" href="#classification-heatmap"><span class="octicon octicon-link"></span></a>Classification heatmap</h2>
 
+<pre><code>cn_hmClass(tmpAns);
 </code></pre>
 
-<p>R plot results</p>
+<h3>
+<a name="features-to-be-added-in-the-near-future" class="anchor" href="#features-to-be-added-in-the-near-future"><span class="octicon octicon-link"></span></a>Features to be added in the near future</h3>
 
-<pre><code>
-### Features to be added in the near future
-
-1. Adding a cell or tissue type
-2. Adding a new platform
-3. Adding a new species
-4. Reconstructing GRNs de novo
-5. Identifying cell and tissue specific sub-networks
-
-</code></pre>
-        </section>
-
-        <aside id="sidebar">
-          <a href="https://github.com/pcahan1/cellnetr/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/pcahan1/cellnetr/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
-
-          <p class="repo-owner"><a href="https://github.com/pcahan1/cellnetr"></a> is maintained by <a href="https://github.com/pcahan1">pcahan1</a>.</p>
-
-          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
+<ol>
+<li>Adding a cell or tissue type</li>
+<li>Adding a new platform</li>
+<li>Adding a new species</li>
+<li>Reconstructing GRNs de novo</li>
+<li>Identifying cell and tissue specific sub-networks</li>
+</ol>
+      </section>
     </div>
 
-  
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Cellnetr maintained by <a href="https://github.com/pcahan1">pcahan1</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
   </body>
 </html>
