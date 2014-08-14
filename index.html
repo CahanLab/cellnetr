@@ -60,28 +60,75 @@ $ git checkout gh-pages
 <h3>
 <a name="running-cellnet" class="anchor" href="#running-cellnet"><span class="octicon octicon-link"></span></a>Running CellNet</h3>
 
-<pre><code>R load cellnetr library
-R load data
+<h2>
+<a name="set-up" class="anchor" href="#set-up"><span class="octicon octicon-link"></span></a>set-up</h2>
+
+<pre><code># Set your library path so that it points to the correct platform and annotation libraries:
+.libPaths("~/sample_packages/install_dir")
+
+# load cellnet
+library("cellnetr")
+
+# load appropriate gene annotation sources
+# mouse
+library("org.Mm.eg.db")
+# if human 
+# library("org.Hs.eg.db")
+
+# load platform annotation
+# mouse4302
+library("mouse4302cdf");
+library("mouse4302.db");
+
+# mogene10
+# library("mogene10sttranscriptcluster.db");
+# library("mogene10stv1cdf");
+
+# hgu133plus2
+# library("hgu133plus2.db");
+# library("hgu133plus2cdf");
+
+# hugene10
+library("hugene10sttranscriptcluster.db");
+library("hugene10stv1cdf");
+
+# set up path the CellNet objects containing the classifiers, GRNs, etc
+# Edit this so that it points to the path where you saved the CellNet objects 
+path_CN_obj&lt;-"~/CellNet/CN_Objects/"; 
+</code></pre>
+
+<h3>
+<a name="load-and-process-data" class="anchor" href="#load-and-process-data"><span class="octicon octicon-link"></span></a>Load and process data</h3>
+
+<pre><code># Load sample table and fix the data file names 
+# replace 'sampleTab.csv' with your sample table name. See [Step 2 here](http://dev.cellnet.hms.harvard.edu/run/) for a description of the sample table format and an example table.
+
+stQuery&lt;-expr_readSampTab("sampleTab.csv");
+stQuery&lt;-geo_fixNames(stQuery);
+
+</code></pre>
+
+<p>R load data
 R load meta-data
-R make a cellnetr object
+R make a cellnetr object</p>
+
+<pre><code>
+### Visualizing and interpreting results
+
 </code></pre>
 
-<h3>
-<a name="visualizing-and-interpreting-results" class="anchor" href="#visualizing-and-interpreting-results"><span class="octicon octicon-link"></span></a>Visualizing and interpreting results</h3>
+<p>R plot results</p>
 
-<pre><code>R plot results
+<pre><code>
+### Features to be added in the near future
+
+1. Adding a cell or tissue type
+2. Adding a new platform
+3. Adding a new species
+4. Reconstructing GRNs de novo
+5. Identifying cell and tissue specific sub-networks
+
 </code></pre>
-
-<h3>
-<a name="features-to-be-added-in-the-near-future" class="anchor" href="#features-to-be-added-in-the-near-future"><span class="octicon octicon-link"></span></a>Features to be added in the near future</h3>
-
-<ol>
-<li>Adding a cell or tissue type</li>
-<li>Adding a new platform</li>
-<li>Adding a new species</li>
-<li>Reconstructing GRNs de novo</li>
-<li>Identifying cell and tissue specific sub-networks</li>
-</ol>
         </section>
 
         <aside id="sidebar">
