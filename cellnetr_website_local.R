@@ -78,7 +78,7 @@ cat(cellnetr_log(lstring), file=logFname, append=TRUE);
 
 # load CellNet object for this platform. 
 cnObjName<-switch(aList[['platform']],
-                  mouse4302 = paste(path_CN_obj_obj, "cnProc_mouse4302_062414.R",sep=''),
+                  mouse4302 = paste(path_CN_obj, "cnProc_mouse4302_062414.R",sep=''),
                   mogene10stv1 = paste(path_CN_obj, "cnProc_mogene_062414.R",sep=''),
                   ###                    mouseIllumina8v2 = paste(path_CN_obj, "",sep=''), ### Add this platform later
                   hgu133plus2 = paste(path_CN_obj, "cnProc_Hg1332_062414.R",sep=''),

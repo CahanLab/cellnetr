@@ -50,15 +50,6 @@ cn_stdout<-function
   cttBest<-cnProc[['grnList']];
   dLevel<-cnObj[['dLevelQuery']];
   
-  if(FALSE){
-  if(is.null(sampOrder)){
-    bOrder<-unique(as.vector(stQuery[,dLevel]));
-  }
-  else{
-    bOrder<-sampOrder;
-  }
-  }
-  
   # Classification heatmap
   myWidth<-nrow(stQuery)*.4;
   myHeight<-length(cttBest)*.3;
@@ -68,6 +59,7 @@ cn_stdout<-function
   tempTitle<-paste("Classification heatmap ", fname_prefix, sep='');
   pdf(fname, width=8.5, height=11);
   cn_hmClass(cnObj, main=tempTitle);
+  
   # set this up so that only the training data from the 'grn' cell type is also shown,
   # along with the query samples
   grnNames<-rownames(cnObj[['normScoresQuery']]);
@@ -344,6 +336,7 @@ mp_hmVars<-function# basic heatmap
 }
 
 
+
 cn_plotnis<-function
 ### plot Network influence scores
 (scoresDF,
@@ -354,19 +347,48 @@ cn_plotnis<-function
  ### limit output to top 50 TFs
  ){
 
-  xmeans<-apply(scoresDF, 1, mean);
-  tfs<-rownames(scoresDF);
-  tfs<-tfs[order(xmeans, decreasing=F)];
+  xmeans<-apply(scoresDF, 2, mean);
+  worst<-which.min(xmeans);
+  #tfs<-rownames(scoresDF);
+  tfs<-rownames(scoresDF)[order(scoresDF[,worst], decreasing=F)];
+  #tfs<-tfs[order(xmeans, decreasing=F)];
   scoresDF<-scoresDF[tfs,];
   if(nrow(scoresDF)>limit){
     scoresDF<-scoresDF[1:limit,];
   }
   
+   scale='none';
+   clusterR=FALSE;
+   clusterC=FALSE;
+   margin=c(12,6);
+   cexR=.75;
+   cexC=.5;
+   aDist=dist;
+   col=colorpanel(99, "blue","white","red");
+   breaks=seq(from=-5, to=5,length.out=100);
+  heatmap.2(scoresDF,
+              col=col,
+              breaks=breaks,
+              scale=scale,
+              trace='none',
+              key=T,
+              Rowv=clusterR,
+              Colv=clusterC,
+              density.info='none',
+              cexRow=cexR,
+              cexCol=cexC,
+              margin=margin,
+              colsep=seq(ncol(scoresDF)),
+              rowsep=seq(nrow(scoresDF)),
+              sepcol='white',
+              sepwidth=c(0.001,0.001),
+              dist=aDist);  
+    
   ##scores1a<-tsco1[tsco1$tfScore<0 ,]#& tsco1$totalScore>0,]
   #  ggplot(data=scoresDF, aes(x=tf, y=totalScore))+ geom_bar(stat="identity", width=.8, fill=color) +
   #    theme_bw() + coord_flip() + xlab("") +  theme(axis.text.y = element_text(size=4)) + ylab("Network influence score") + ggtitle(main);
   # barplot of NIS
-  mp_hmVars(scoresDF, rownames(scoresDF), scale='none', clusterR=F, clusterC=F, cexR=.75)
+  #mp_hmVars(scoresDF, rownames(scoresDF), scale='none', clusterR=F, clusterC=F, cexR=.75)
   # heatmap of TF scores
 }
 
