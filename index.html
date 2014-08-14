@@ -42,16 +42,48 @@
 <h3>
 <a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h3>
 
-<p>CellNet was written in <a href="http://www.r-project.org/">R</a>. List prerequisites.</p>
+<p>CellNet was written in <a href="http://www.r-project.org/">R</a>.  The following R packages, available through <a href="http://cran.r-project.org/">CRAN</a>, are required:</p>
+
+<ul>
+<li>ggplot2</li>
+<li>gplots</li>
+<li>randomForest</li>
+<li>igraph</li>
+</ul><p>You can install them packages from within an R session by typing: </p>
+
+<pre><code>&gt; install.packages(c("ggplot2", "gplots", "randomForest", "igraph"))
+</code></pre>
+
+<p>You will also need to install the <i>affy</i> package from Bioconductor. You can install it from within an R session by typing:</p>
+
+<pre><code>&gt; source("http://bioconductor.org/biocLite.R") 
+&gt; biocLite("affy")
+</code></pre>
+
+<p>You will also need to install the following Bioconductor annotation packages. Please note that you must download these particular versions in order for CellNet to run properly:</p>
+
+<ul>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/org.Mm.eg.db_2.8.0.tar.gz">org.Mm.eg.db_2.8.0</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/org.Hs.eg.db_2.8.0.tar.gz">org.Hs.eg.db_2.8.0</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/mouse4302.db_2.8.1.tar.gz">mouse4302.db</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/mouse4302cdf_2.11.0.tar.gz">mouse4302cdf_2.11.0</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/hgu133plus2.db_2.8.0.tar.gz">hgu133plus2.db</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/hgu133plus2cdf_2.11.0.tar.gz">hgu133plus2cdf</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/hugene10sttranscriptcluster.db_8.0.1.tar.gz">hugene10sttranscriptcluster.db_8.0.1</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/hugene10stv1cdf_2.11.0.tar.gz">hugene10stv1cdf</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/mogene10sttranscriptcluster.db_8.0.1.tar.gz">mogene10sttranscriptcluster.db_8.0.1</a></li>
+<li><a href="http://bioconductor.org/packages/2.11/data/annotation/src/contrib/mogene10stv1cdf_2.11.0.tar.gz">mogene10stv1cdf</a></li>
+</ul><p>We recommend that you install these packages to directory where they will not be overwritten. For example, we install these in the directory ~/sample_packages/install_dir. After you have downloaded these files, you can install them by typing at the shell:</p>
+
+<pre><code>R CMD INSTALL -l ~/sample_packages/install_dir package name
+</code></pre>
 
 <h3>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h3>
 
-<p>Directions to install locally.</p>
+<p>To install CellNet, download the compressed package, then at the shell type:</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<pre><code>R CMD INSTALL -l ~/sample_packages/install_dir cellnetr.0.1.tar.gz
 </code></pre>
 
 <h3>
